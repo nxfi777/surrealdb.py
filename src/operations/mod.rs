@@ -1,7 +1,6 @@
 /// Handles operations to the database.
 use pyo3::prelude::{wrap_pyfunction, PyModule};
 pub mod auth;
-pub mod auth;
 pub mod create;
 pub mod delete;
 pub mod query;
