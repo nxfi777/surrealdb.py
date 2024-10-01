@@ -4,17 +4,15 @@ use pyo3::wrap_pyfunction;
 
 mod connection;
 mod operations;
+mod types;
 
 #[cfg(test)]
 mod test_url;
 
 use connection::python::{
-    rust_make_connection_future, 
-    rust_sign_in_future,
-    rust_use_database_future,
-    rust_use_namespace_future
+    rust_make_connection_future, rust_sign_in_future, rust_use_database_future,
+    rust_use_namespace_future,
 };
-
 
 /// Wraps a future into a python object. The example code is the following:
 /// ```rust
@@ -34,7 +32,6 @@ macro_rules! py_future_wrapper {
         })
     };
 }
-
 
 #[pymodule]
 fn rust_surrealdb(_py: Python, m: &PyModule) -> PyResult<()> {

@@ -1,39 +1,38 @@
 //! Defines structs, enums, and functions that aid in the passing of data between the Python API and connection core.
-use pyo3::prelude::*;
 use core::fmt::Debug;
+use pyo3::prelude::*;
 
-use surrealdb::Surreal;
 use surrealdb::engine::any::Any;
-
+use surrealdb::Surreal;
 
 /// A wrapped connection that can be passed between the Python API and connection core.
-/// 
+///
 /// # Fields
 /// * `connection` - The connection to be wrapped
-#[pyclass]
+#[pyclass(frozen)]
 #[derive(Clone, Debug)]
 pub struct WrappedConnection {
-    pub connection: Surreal<Any>
+    pub connection: Surreal<Any>,
 }
 
-
 /// Checks and splits the connection string into its components.
-/// 
+///
 /// # Arguments
 /// * `url` - The URL for the connection to be checked and split
-/// 
+///
 /// # Returns
 /// * `Ok((String, String, String))` - connection address, namespace, and database
-pub fn extract_connection_components(url: String) -> Result<(String, Option<String>, Option<String>), String> {
-
+pub fn extract_connection_components(
+    url: String,
+) -> Result<(String, Option<String>, Option<String>), String> {
     // early return if the url is rocksdb
     if &url.contains("rocksdb") == &true {
-        return Ok((url, None, None))
+        return Ok((url, None, None));
     }
 
     let parts: Vec<&str> = url.split("://").collect();
     if parts.len() != 2 {
-        return Err("invalid url".to_string())
+        return Err("invalid url".to_string());
     }
     let protocol = parts[0];
     let address = parts[1];
@@ -46,27 +45,28 @@ pub fn extract_connection_components(url: String) -> Result<(String, Option<Stri
         &1 => {
             // this infers that there is no database or namespace provided
             let address = address_parts.join("/");
-            return Ok((format!("{}://{}", protocol, address), None, None))
-        },
+            return Ok((format!("{}://{}", protocol, address), None, None));
+        }
         &2 => {
             // this infers that the namespace is provided but not the database
             let namespace = address_parts.pop().unwrap().to_string();
             let address = address_parts.join("/");
-            return Ok((format!("{}://{}", protocol, address), Some(namespace), None))
-        },
+            return Ok((format!("{}://{}", protocol, address), Some(namespace), None));
+        }
         &3 => {
             // this infers that the namespace and database are provided
             let database = address_parts.pop().unwrap().to_string();
             let namespace = address_parts.pop().unwrap().to_string();
             let address = address_parts.join("/");
-            return Ok((format!("{}://{}", protocol, address), Some(namespace), Some(database)))
-        },
-        _ => {
-            return Err("invalid address provided".to_string())
+            return Ok((
+                format!("{}://{}", protocol, address),
+                Some(namespace),
+                Some(database),
+            ));
         }
+        _ => return Err("invalid address provided".to_string()),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -112,5 +112,4 @@ mod tests {
         assert_eq!(database, None);
         assert_eq!(namespace, None);
     }
-
 }
